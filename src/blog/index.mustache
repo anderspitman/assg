@@ -4,5 +4,13 @@
   <p>
     Dis blog
   </p>
+
+  <ul>
+    {{#posts}}
+    <li>
+      {{name}}
+    </li>
+    {{/posts}}
+  </ul>
 </main>
 {{> ../footer}}

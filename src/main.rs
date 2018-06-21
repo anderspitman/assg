@@ -1,7 +1,16 @@
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate mustache;
 
 use std::{io, fs};
 use mustache::MapBuilder;
+use std::collections::HashMap;
+
+#[derive(Debug, Serialize)]
+struct Post {
+    name: String
+}
 
 fn main() -> io::Result<()> {
 
@@ -34,11 +43,22 @@ fn main() -> io::Result<()> {
     let blog_template = mustache::compile_path("./src/blog/index.mustache")
         .expect("Failed to compile blog template");
 
-    let blog_data = MapBuilder::new()
-       //.insert_str("name", "Venus")
-       .build();
+    let mut filenames = Vec::new();
+    for file in fs::read_dir("src/blog/posts")? {
+        let file = file?;
+        filenames.push(file.file_name());
+    }
 
-    let blog_string = blog_template.render_data_to_string(&blog_data)
+    let mut posts = Vec::new();
+
+    for filename in filenames {
+        posts.push(Post { name: filename.into_string().unwrap() });
+    }
+
+    let mut blog_data = HashMap::new();
+    blog_data.insert("posts", posts);
+
+    let blog_string = blog_template.render_to_string(&blog_data)
         .unwrap();
 
     fs::write("dist/blog/index.html", blog_string)?;

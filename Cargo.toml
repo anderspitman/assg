@@ -4,3 +4,5 @@ version = "0.1.0"
 
 [dependencies]
 mustache = "*"
+serde = "*"
+serde_derive = "*"
