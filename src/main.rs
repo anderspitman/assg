@@ -33,7 +33,6 @@ struct Post {
 fn main() -> io::Result<()> {
     
     let args: Vec<String> = env::args().collect();
-    println!("{:?}", args);
 
     if args.len() < 3 {
         println!("Usage: {} SRC_DIR OUT_DIR", args[0]);
