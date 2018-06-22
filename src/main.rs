@@ -18,13 +18,16 @@ use markdown_renderer::{Renderer};
 #[derive(Debug, Deserialize)]
 struct PostConfig {
     title: String,
+    date: String,
     format: String,
 }
 
 #[derive(Debug, Serialize)]
 struct Post {
     title: String,
+    date: String,
     url: String,
+    dir: PathBuf,
 }
 
 fn main() -> io::Result<()> {
@@ -32,7 +35,7 @@ fn main() -> io::Result<()> {
     let src_dir = Path::new("src");
     let out_dir = Path::new("dist");
     let blog_out_dir = out_dir.join("blog");
-    let posts_out_dir = blog_out_dir.join("posts");
+    let posts_out_dir = blog_out_dir.clone();
 
     fs::remove_dir_all(out_dir)?;
     fs::create_dir(out_dir)?;
@@ -57,8 +60,8 @@ fn main() -> io::Result<()> {
 
     // blog
     
-    fs::create_dir(out_dir.join("blog"))?;
-    fs::create_dir(blog_out_dir.join("posts"))?;
+    fs::create_dir(&blog_out_dir)?;
+    //fs::create_dir(&posts_out_dir)?;
    
     let blog_template = mustache::compile_path("./src/blog/index.mustache")
         .expect("Failed to compile blog template");
@@ -75,19 +78,22 @@ fn main() -> io::Result<()> {
 
     let mut posts = Vec::new();
 
-    render_posts(&posts_out_dir, &post_dirs)?;
-
     // blog index
     for post_dir in post_dirs.into_iter() {
         let metadata = fs::read_to_string(post_dir.join("metadata.toml"))?;
         let post: PostConfig = toml::from_str(metadata.as_str()).unwrap();
-        let url = Path::new("posts").join(post_dir.file_name().unwrap());
+        //let url = Path::new("posts").join(post_dir.file_name().unwrap());
+        let url = post_dir.file_name().unwrap();
         //println!("{:?}", url);
         posts.push(Post {
             title: post.title,
-            url: url.into_os_string().into_string().unwrap()
+            date: post.date,
+            url: url.to_os_string().into_string().unwrap(),
+            dir: post_dir.clone(),
         });
     }
+
+    render_posts(&posts_out_dir, &posts)?;
 
     let mut blog_data = HashMap::new();
     blog_data.insert("posts", posts);
@@ -97,32 +103,13 @@ fn main() -> io::Result<()> {
 
     fs::write("dist/blog/index.html", blog_string)?;
 
-    let md = fs::read_to_string(
-        "src/blog/posts/2018-06-19-rust-docker-barebones/post.md")?;
-
-    let renderer = Renderer::new();
-    let html = renderer.render(&md);
-
-    //println!("{}", html);
-
-    let post_template = mustache::compile_path("./src/post.mustache")
-        .expect("Failed to compile post template");
-
-    let post_data = MapBuilder::new()
-       .insert_str("content", html)
-       .build();
-
-    let post_string = post_template.render_data_to_string(&post_data)
-        .unwrap();
-
-    fs::write("dist/blog/posts/index.html", post_string)?;
-
     Ok(())
 }
 
-fn render_posts(out_dir: &PathBuf, post_dirs: &Vec<PathBuf>) -> io::Result<()>{
+fn render_posts(out_dir: &PathBuf, posts: &Vec<Post>) -> io::Result<()>{
 
-    for dir in post_dirs {
+    for post in posts {
+        let dir = post.dir.clone();
         let name = dir.file_name().unwrap();
         fs::create_dir(out_dir.join(name))?;
 
@@ -136,6 +123,7 @@ fn render_posts(out_dir: &PathBuf, post_dirs: &Vec<PathBuf>) -> io::Result<()>{
             .expect("Failed to compile post template");
 
         let post_data = MapBuilder::new()
+           .insert_str("date", post.date.clone())
            .insert_str("content", html)
            .build();
 
