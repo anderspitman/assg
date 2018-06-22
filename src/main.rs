@@ -8,7 +8,7 @@ extern crate toml;
 
 mod markdown_renderer;
 
-use std::{io, fs};
+use std::{env, io, fs};
 use std::path::{Path, PathBuf};
 use mustache::MapBuilder;
 use std::collections::HashMap;
@@ -32,8 +32,22 @@ struct Post {
 
 fn main() -> io::Result<()> {
     
-    let src_dir = Path::new("src");
-    let out_dir = Path::new("dist");
+    let args: Vec<String> = env::args().collect();
+    println!("{:?}", args);
+
+    if args.len() < 3 {
+        println!("Usage: {} SRC_DIR OUT_DIR", args[0]);
+        return Ok(());
+    }
+
+    // Root is for files owned by the generator (ie templates, etc).
+    let root_dir = Path::new("src");
+    let blog_root_dir = root_dir.join("blog");
+
+    let src_dir = Path::new(&args[1]);
+    let blog_content_dir = src_dir.join("blog");
+
+    let out_dir = Path::new(&args[2]);
     let blog_out_dir = out_dir.join("blog");
     let posts_out_dir = blog_out_dir.clone();
 
@@ -42,11 +56,11 @@ fn main() -> io::Result<()> {
 
     // styles
     
-    fs::copy(src_dir.join("styles.css"), out_dir.join("styles.css"))?;
+    fs::copy(root_dir.join("styles.css"), out_dir.join("styles.css"))?;
 
     // index
 
-    let index_template = mustache::compile_path(src_dir.join("index.mustache"))
+    let index_template = mustache::compile_path(root_dir.join("index.mustache"))
         .expect("Failed to compile index template");
 
     let index_data = MapBuilder::new()
@@ -63,11 +77,11 @@ fn main() -> io::Result<()> {
     fs::create_dir(&blog_out_dir)?;
     //fs::create_dir(&posts_out_dir)?;
    
-    let blog_template = mustache::compile_path("./src/blog/index.mustache")
+    let blog_template = mustache::compile_path(blog_root_dir.join("index.mustache"))
         .expect("Failed to compile blog template");
 
     let mut post_dirs = Vec::new();
-    for entry in fs::read_dir("src/blog/posts")? {
+    for entry in fs::read_dir(blog_content_dir.join("posts"))? {
         let entry = entry?;
         //println!("{:?}", entry.path());
         let path = entry.path();
@@ -93,7 +107,7 @@ fn main() -> io::Result<()> {
         });
     }
 
-    render_posts(&posts_out_dir, &posts)?;
+    render_posts(&root_dir, &posts_out_dir, &posts)?;
 
     let mut blog_data = HashMap::new();
     blog_data.insert("posts", posts);
@@ -106,7 +120,8 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn render_posts(out_dir: &PathBuf, posts: &Vec<Post>) -> io::Result<()>{
+fn render_posts(
+        src_dir: &Path, out_dir: &PathBuf, posts: &Vec<Post>) -> io::Result<()>{
 
     for post in posts {
         let dir = post.dir.clone();
@@ -119,7 +134,7 @@ fn render_posts(out_dir: &PathBuf, posts: &Vec<Post>) -> io::Result<()>{
         let renderer = Renderer::new();
         let html = renderer.render(&md);
 
-        let post_template = mustache::compile_path("./src/post.mustache")
+        let post_template = mustache::compile_path(src_dir.join("post.mustache"))
             .expect("Failed to compile post template");
 
         let post_data = MapBuilder::new()

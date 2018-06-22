@@ -86,5 +86,7 @@ fn build_language_map() -> HashMap<String, String> {
     map.insert("json".to_string(), "JSON".to_string());
     map.insert("toml".to_string(), "Plain Text".to_string());
     map.insert("rust".to_string(), "Rust".to_string());
+    map.insert("css".to_string(), "CSS".to_string());
+    map.insert("python".to_string(), "Python".to_string());
     map
 }
