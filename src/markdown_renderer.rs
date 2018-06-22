@@ -39,7 +39,8 @@ impl Renderer {
             match event {
                 Event::Start(Tag::CodeBlock(language)) => {
                     in_code_block = true;
-                    syntax_name = lang_map.get(&language.to_string()).unwrap();
+                    syntax_name = lang_map.get(&language.to_string())
+                        .expect(&format!("{:?} not in language map", language));
                     Event::Text(Owned("".to_string()))
                 },
                 Event::End(Tag::CodeBlock(_)) => {
@@ -78,8 +79,12 @@ impl Renderer {
 
 fn build_language_map() -> HashMap<String, String> {
     let mut map = HashMap::new();
-    map.insert("".to_string(), "Shell-Unix-Generic".to_string());
+    map.insert("".to_string(), "Plain Text".to_string());
     map.insert("bash".to_string(), "Shell-Unix-Generic".to_string());
     map.insert("javascript".to_string(), "JavaScript".to_string());
+    map.insert("html".to_string(), "HTML".to_string());
+    map.insert("json".to_string(), "JSON".to_string());
+    map.insert("toml".to_string(), "Plain Text".to_string());
+    map.insert("rust".to_string(), "Rust".to_string());
     map
 }
