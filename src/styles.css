@@ -1,18 +1,21 @@
-html {
-    font-size: 1.2em;
-    /*font-family: Courier New;*/
-    font-family: Verdana;
-    max-width: 900px;
+body {
     margin: 0 auto;
+    font-size: 20px;
+    font-family: Courier;
+    max-width: 650px;
+    line-height: 1.5;
+    color: #333;
+    background-color: #eeeeee;
 }
 
 nav {
     font-size: 1.4em;
+    font-weight: bold;
+    margin-bottom: 20px;
 }
 
 pre {
     overflow-x: scroll;
-    font-size: 1.2em;
 }
 
 .contact-links a {
@@ -26,6 +29,6 @@ pre {
 }
 
 .blog-post-title {
+    font-family: Impact;
     font-size: 2.0em;
-    margin-top: 20px;
 }
