@@ -98,9 +98,10 @@ fn main() -> io::Result<()> {
         //let url = Path::new("posts").join(post_dir.file_name().unwrap());
         let url = post_dir.file_name().unwrap();
         //println!("{:?}", url);
+        let date = get_date_from_iso8601(&post.date);
         posts.push(Post {
             title: post.title,
-            date: post.date,
+            date: date,
             url: url.to_os_string().into_string().unwrap(),
             dir: post_dir.clone(),
         });
@@ -152,4 +153,8 @@ fn render_posts(
     }
 
     Ok(())
+}
+
+fn get_date_from_iso8601(iso8601: &String) -> String {
+    iso8601.split("T").collect::<Vec<&str>>()[0].to_string()
 }
