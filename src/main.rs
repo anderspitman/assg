@@ -2,10 +2,15 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate mustache;
+extern crate pulldown_cmark;
+extern crate syntect;
+
+mod markdown_renderer;
 
 use std::{io, fs};
 use mustache::MapBuilder;
 use std::collections::HashMap;
+use markdown_renderer::{Renderer};
 
 #[derive(Debug, Serialize)]
 struct Post {
@@ -39,6 +44,7 @@ fn main() -> io::Result<()> {
     // blog
     
     fs::create_dir("dist/blog")?;
+    fs::create_dir("dist/blog/posts")?;
    
     let blog_template = mustache::compile_path("./src/blog/index.mustache")
         .expect("Failed to compile blog template");
@@ -62,6 +68,26 @@ fn main() -> io::Result<()> {
         .unwrap();
 
     fs::write("dist/blog/index.html", blog_string)?;
+
+    let md = fs::read_to_string(
+        "src/blog/posts/2018-06-19-rust-docker-barebones/post.md")?;
+
+    let renderer = Renderer::new();
+    let html = renderer.render(&md);
+
+    //println!("{}", html);
+
+    let post_template = mustache::compile_path("./src/post.mustache")
+        .expect("Failed to compile post template");
+
+    let post_data = MapBuilder::new()
+       .insert_str("content", html)
+       .build();
+
+    let post_string = post_template.render_data_to_string(&post_data)
+        .unwrap();
+
+    fs::write("dist/blog/posts/index.html", post_string)?;
 
     Ok(())
 }
