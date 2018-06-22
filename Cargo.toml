@@ -1,5 +1,5 @@
 [package]
-name = "site_gen"
+name = "assg"
 version = "0.1.0"
 
 [dependencies]
