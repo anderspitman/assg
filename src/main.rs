@@ -123,6 +123,7 @@ fn render_posts(out_dir: &PathBuf, posts: &Vec<Post>) -> io::Result<()>{
             .expect("Failed to compile post template");
 
         let post_data = MapBuilder::new()
+           .insert_str("title", post.title.clone())
            .insert_str("date", post.date.clone())
            .insert_str("content", html)
            .build();
