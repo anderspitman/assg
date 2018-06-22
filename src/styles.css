@@ -6,7 +6,15 @@ html {
     margin: 0 auto;
 }
 
+nav {
+    font-size: 1.4em;
+}
+
 pre {
     overflow-x: scroll;
     font-size: 1.2em;
+}
+
+.contact-links a {
+    display: block;
 }
