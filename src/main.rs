@@ -107,6 +107,9 @@ fn main() -> io::Result<()> {
         });
     }
 
+    posts.sort_unstable_by(|a, b| a.date.cmp(&b.date));
+    posts.reverse();
+
     render_posts(&root_dir, &posts_out_dir, &posts)?;
 
     let mut blog_data = HashMap::new();
