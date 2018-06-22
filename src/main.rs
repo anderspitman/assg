@@ -14,6 +14,10 @@ use mustache::MapBuilder;
 use std::collections::HashMap;
 use markdown_renderer::{Renderer};
 
+#[derive(Debug, Deserialize)]
+struct Config {
+    portrait_path: String,
+}
 
 #[derive(Debug, Deserialize)]
 struct PostConfig {
@@ -50,12 +54,22 @@ fn main() -> io::Result<()> {
     let blog_out_dir = out_dir.join("blog");
     let posts_out_dir = blog_out_dir.clone();
 
+    let config_text = fs::read_to_string(src_dir.join("config.toml"))?;
+    let config: Config = toml::from_str(config_text.as_str()).unwrap();
+
     fs::remove_dir_all(out_dir)?;
     fs::create_dir(out_dir)?;
 
     // styles
-    
     fs::copy(root_dir.join("styles.css"), out_dir.join("styles.css"))?;
+
+    // portrait image
+    let mut portrait_url = Path::new(&config.portrait_path).to_path_buf();
+    let filename = portrait_url.file_name().unwrap().to_os_string();
+    portrait_url.pop();
+    let portrait_dir = out_dir.join(portrait_url);
+    fs::create_dir_all(&portrait_dir)?;
+    fs::copy(src_dir.join(&config.portrait_path), portrait_dir.join(filename))?;
 
     // index
 
@@ -63,6 +77,7 @@ fn main() -> io::Result<()> {
         .expect("Failed to compile index template");
 
     let index_data = MapBuilder::new()
+       .insert_str("portrait_url", config.portrait_path)
        .build();
 
     let index_string = index_template.render_data_to_string(&index_data)

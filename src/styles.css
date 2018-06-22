@@ -5,7 +5,6 @@ body {
     max-width: 650px;
     line-height: 1.5;
     color: #333;
-    background-color: #eeeeee;
 }
 
 nav {
@@ -16,6 +15,15 @@ nav {
 
 pre {
     overflow-x: scroll;
+}
+
+.portrait img {
+    border-radius: 50%;
+}
+
+.portrait {
+    width: 30%;
+    margin: 0 auto;
 }
 
 .contact-links a {
