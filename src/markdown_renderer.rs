@@ -41,7 +41,7 @@ impl Renderer {
                     in_code_block = true;
                     syntax_name = lang_map.get(&language.to_string())
                         .expect(&format!("{:?} not in language map", language));
-                    Event::Text(Owned("".to_string()))
+                    Event::Html(Owned("<div class='code'>".to_string()))
                 },
                 Event::End(Tag::CodeBlock(_)) => {
                     in_code_block = false;
@@ -49,8 +49,10 @@ impl Renderer {
                     let syntax = ss.find_syntax_by_name(
                         syntax_name.as_str()).unwrap();
 
-                    let html = highlighted_snippet_for_string(
+                    let mut html = highlighted_snippet_for_string(
                         &code.to_string(), syntax, theme);
+
+                    html.push_str("</div>");
 
                     code = String::new();
                     Event::Html(Owned(html))

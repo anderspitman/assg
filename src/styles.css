@@ -17,6 +17,10 @@ pre {
     overflow-x: scroll;
 }
 
+.code {
+    font-size: 0.8em;
+}
+
 .portrait img {
     border-radius: 50%;
 }
