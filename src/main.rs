@@ -11,12 +11,12 @@ mod markdown_renderer;
 use std::{env, io, fs};
 use std::path::{Path, PathBuf};
 use mustache::MapBuilder;
-use std::collections::HashMap;
 use markdown_renderer::{Renderer};
 
 #[derive(Debug, Deserialize)]
 struct Config {
     portrait_path: String,
+    google_analytics_tracking_id: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -73,11 +73,23 @@ fn main() -> io::Result<()> {
 
     // index
 
+    let ga_template = mustache::compile_path(
+        root_dir.join("google_analytics.mustache"))
+        .expect("Failed to compile ga template");
+    let ga_data = MapBuilder::new()
+       .insert_str("google_analytics_tracking_id",
+                   config.google_analytics_tracking_id)
+       .build();
+    let ga_string = ga_template.render_data_to_string(&ga_data)
+        .unwrap();
+
     let index_template = mustache::compile_path(root_dir.join("index.mustache"))
         .expect("Failed to compile index template");
-
     let index_data = MapBuilder::new()
        .insert_str("portrait_url", config.portrait_path)
+       // TODO: this is a hack to workaround the fact that rust-mustache
+       // doesn't seem to be passing the context down to nested partials
+       .insert_str("ga_partial", ga_string.clone())
        .build();
 
     let index_string = index_template.render_data_to_string(&index_data)
@@ -91,7 +103,8 @@ fn main() -> io::Result<()> {
     fs::create_dir(&blog_out_dir)?;
     //fs::create_dir(&posts_out_dir)?;
    
-    let blog_template = mustache::compile_path(blog_root_dir.join("index.mustache"))
+    let blog_template = mustache::compile_path(
+        blog_root_dir.join("index.mustache"))
         .expect("Failed to compile blog template");
 
     let mut post_dirs = Vec::new();
@@ -125,12 +138,18 @@ fn main() -> io::Result<()> {
     posts.sort_unstable_by(|a, b| a.date.cmp(&b.date));
     posts.reverse();
 
-    render_posts(&root_dir, &posts_out_dir, &posts)?;
+    render_posts(&root_dir, &posts_out_dir, &posts, ga_string.clone())?;
 
-    let mut blog_data = HashMap::new();
-    blog_data.insert("posts", posts);
+    let blog_data = MapBuilder::new()
+        .insert("posts", &posts).unwrap()
+        // TODO: this is a hack to workaround the fact that rust-mustache
+        // doesn't seem to be passing the context down to nested partials
+        .insert("ga_partial", &ga_string).unwrap()
+        .build();
 
-    let blog_string = blog_template.render_to_string(&blog_data)
+    //let blog_string = blog_template.render_to_string(&blog_data)
+    //    .unwrap();
+    let blog_string = blog_template.render_data_to_string(&blog_data)
         .unwrap();
 
     fs::write("dist/blog/index.html", blog_string)?;
@@ -139,7 +158,10 @@ fn main() -> io::Result<()> {
 }
 
 fn render_posts(
-        src_dir: &Path, out_dir: &PathBuf, posts: &Vec<Post>) -> io::Result<()>{
+    src_dir: &Path,
+    out_dir: &PathBuf,
+    posts: &Vec<Post>,
+    ga_string: String) -> io::Result<()>{
 
     for post in posts {
         let dir = post.dir.clone();
@@ -159,6 +181,9 @@ fn render_posts(
            .insert_str("title", post.title.clone())
            .insert_str("date", post.date.clone())
            .insert_str("content", html)
+           // TODO: this is a hack to workaround the fact that rust-mustache
+           // doesn't seem to be passing the context down to nested partials
+           .insert("ga_partial", &ga_string).unwrap()
            .build();
 
         let post_string = post_template.render_data_to_string(&post_data)
