@@ -124,13 +124,15 @@ fn main() -> io::Result<()> {
         let metadata = fs::read_to_string(post_dir.join("metadata.toml"))?;
         let post: PostConfig = toml::from_str(metadata.as_str()).unwrap();
         //let url = Path::new("posts").join(post_dir.file_name().unwrap());
-        let url = post_dir.file_name().unwrap();
+        let url = Path::new("/blog").join(post_dir.file_name().unwrap());
+        let mut url_string = url.into_os_string().into_string().unwrap();
+        url_string.push('/');
         //println!("{:?}", url);
         let date = get_date_from_iso8601(&post.date);
         posts.push(Post {
             title: post.title,
             date: date,
-            url: url.to_os_string().into_string().unwrap(),
+            url: url_string,
             dir: post_dir.clone(),
         });
     }
