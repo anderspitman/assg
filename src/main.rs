@@ -20,10 +20,11 @@ struct Config {
 }
 
 #[derive(Debug, Deserialize)]
-struct PostConfig {
+struct PostMetadata {
     title: String,
     date: String,
     format: String,
+    publish: Option<bool>,
 }
 
 #[derive(Debug, Serialize)]
@@ -122,7 +123,15 @@ fn main() -> io::Result<()> {
     // blog index
     for post_dir in post_dirs.into_iter() {
         let metadata = fs::read_to_string(post_dir.join("metadata.toml"))?;
-        let post: PostConfig = toml::from_str(metadata.as_str()).unwrap();
+        let post: PostMetadata = toml::from_str(metadata.as_str()).unwrap();
+
+        // skip any posts with false publish metadata
+        if let Some(publish) = post.publish {
+            if !publish {
+                continue;
+            }
+        }
+
         //let url = Path::new("posts").join(post_dir.file_name().unwrap());
         let url = Path::new("/blog").join(post_dir.file_name().unwrap());
         let mut url_string = url.into_os_string().into_string().unwrap();
