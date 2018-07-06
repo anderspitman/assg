@@ -40,22 +40,18 @@ fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 3 {
-        println!("Usage: {} SRC_DIR OUT_DIR", args[0]);
+        println!("Usage: {} CONTENT_DIR OUT_DIR", args[0]);
         return Ok(());
     }
 
     // Root is for files owned by the generator (ie templates, etc).
     let root_dir = Path::new("src");
-    let blog_root_dir = root_dir.join("blog");
 
-    let src_dir = Path::new(&args[1]);
-    let blog_content_dir = src_dir.join("blog");
+    let content_dir = Path::new(&args[1]);
 
     let out_dir = Path::new(&args[2]);
-    let blog_out_dir = out_dir.join("blog");
-    let posts_out_dir = blog_out_dir.clone();
 
-    let config_text = fs::read_to_string(src_dir.join("config.toml"))?;
+    let config_text = fs::read_to_string(content_dir.join("config.toml"))?;
     let config: Config = toml::from_str(config_text.as_str()).unwrap();
 
     fs::remove_dir_all(out_dir)?;
@@ -70,7 +66,7 @@ fn main() -> io::Result<()> {
     portrait_url.pop();
     let portrait_dir = out_dir.join(portrait_url);
     fs::create_dir_all(&portrait_dir)?;
-    fs::copy(src_dir.join(&config.portrait_path), portrait_dir.join(filename))?;
+    fs::copy(content_dir.join(&config.portrait_path), portrait_dir.join(filename))?;
 
     // index
 
@@ -98,9 +94,24 @@ fn main() -> io::Result<()> {
 
     fs::write(out_dir.join("index.html"), index_string)?;
 
+    make_blog_page(&root_dir, &out_dir, &content_dir, ga_string);
 
-    // blog
+    Ok(())
+}
+
+fn make_blog_page(
+    root_dir: &Path,
+    out_dir: &Path,
+    content_dir: &Path,
+    ga_string: String) -> io::Result<()> {
     
+    let blog_root_dir = root_dir.join("blog");
+
+    let blog_out_dir = out_dir.join("blog");
+    let posts_out_dir = blog_out_dir.clone();
+
+    let blog_content_dir = content_dir.join("blog");
+
     fs::create_dir(&blog_out_dir)?;
     //fs::create_dir(&posts_out_dir)?;
    
@@ -169,10 +180,10 @@ fn main() -> io::Result<()> {
 }
 
 fn render_posts(
-    src_dir: &Path,
+    content_dir: &Path,
     out_dir: &PathBuf,
     posts: &Vec<Post>,
-    ga_string: String) -> io::Result<()>{
+    ga_string: String) -> io::Result<()> {
 
     for post in posts {
         let dir = post.dir.clone();
@@ -185,7 +196,7 @@ fn render_posts(
         let renderer = Renderer::new();
         let html = renderer.render(&md);
 
-        let post_template = mustache::compile_path(src_dir.join("post.mustache"))
+        let post_template = mustache::compile_path(content_dir.join("post.mustache"))
             .expect("Failed to compile post template");
 
         let post_data = MapBuilder::new()
@@ -204,6 +215,9 @@ fn render_posts(
     }
 
     Ok(())
+}
+
+fn make_projects_page(content_dir: &Path) {
 }
 
 fn get_date_from_iso8601(iso8601: &String) -> String {
