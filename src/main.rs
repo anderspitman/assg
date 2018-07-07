@@ -115,6 +115,11 @@ fn main() -> io::Result<()> {
     make_blog_page(&root_dir, &out_dir, &content_dir, &ga_string)?;
     make_projects_page(&root_dir, &out_dir, &content_dir, &ga_string)?;
 
+    // apps are expected to provide their own entry point. This simply
+    // creates a place for them to live.
+    let app_out_dir = out_dir.join("apps");
+    fs::create_dir(app_out_dir)?;
+
     Ok(())
 }
 
