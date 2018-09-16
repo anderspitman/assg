@@ -42,6 +42,7 @@ struct ProjectMetadata {
     filename: String,
     format: String,
     publish: Option<bool>,
+    js_file: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -51,6 +52,7 @@ struct Project {
     format: String,
     url: String,
     dir: PathBuf,
+    js_file: Option<String>,
 }
 
 fn main() -> io::Result<()> {
@@ -284,6 +286,7 @@ fn make_projects_page(
             format: project_md.format,
             url: url_string,
             dir: project_dir.clone(),
+            js_file: project_md.js_file,
         });
     }
 
@@ -335,6 +338,11 @@ fn render_projects(
             .unwrap();
 
         fs::write(out_dir.join(name).join("index.html"), project_string)?;
+
+        if let Some(js_filename) = &project.js_file {
+            println!("{:?}", out_dir.join(js_filename));
+            fs::copy(dir.join(js_filename), out_dir.join(name).join(js_filename))?;
+        }
     }
 
     Ok(())
