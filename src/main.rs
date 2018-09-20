@@ -77,6 +77,9 @@ fn main() -> io::Result<()> {
     fs::remove_dir_all(out_dir)?;
     fs::create_dir(out_dir)?;
 
+    // js
+    fs::copy(content_dir.join("bundle.js"), out_dir.join("bundle.js"))?;
+
     // styles
     fs::copy(root_dir.join("styles.css"), out_dir.join("styles.css"))?;
 
